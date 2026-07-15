@@ -1,0 +1,33 @@
+# Git and Environment
+.git
+.env
+.DS_Store
+
+# Secrets and Credentials
+service_account.json
+*.json
+
+# Airflow and Astro Framework
+airflow_settings.yaml
+__pycache__/
+astro
+.venv
+.astro/standalone/
+airflow-webserver.pid
+webserver_config.py
+airflow.cfg
+airflow.db
+logs/
+
+# Heavy Data Files (Crucial to prevent bloat)
+data/
+*.duckdb
+*.parquet
+*.crc
+*.csv
+**/data/processed/
+
+# Assets and UI Screenshots
+*.png
+*.jpg
+*.jpeg

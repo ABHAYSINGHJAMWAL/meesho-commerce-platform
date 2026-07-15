@@ -1,14 +1,14 @@
 from pyspark.sql import SparkSession
-import os
 
 def create_spark_session(app_name: str) -> SparkSession:
+    """
+    Single place to configure Spark for all batch jobs.
+    Why: every job needs same config — write once, use everywhere.
+    """
     return SparkSession.builder \
         .appName(app_name) \
         .master("local[*]") \
         .config("spark.sql.adaptive.enabled", "true") \
         .config("spark.sql.shuffle.partitions", "8") \
         .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
-        .config("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version", "2") \
-        .config("spark.hadoop.io.nativeio.NativeIO$Windows.disabled", "true") \
-        .config("spark.hadoop.fs.file.impl.disable.cache", "true") \
         .getOrCreate()

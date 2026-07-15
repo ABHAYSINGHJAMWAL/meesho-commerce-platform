@@ -29,14 +29,6 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# Tell Spark exactly which Python executable to use
-# for both driver and worker processes.
-# Without this, Spark on Windows can fail to spawn
-# worker processes correctly inside a venv.
-os.environ['PYSPARK_PYTHON'] = sys.executable
-os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
-
-
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
@@ -580,25 +572,12 @@ def compute_category_trends(orders_df: DataFrame) -> DataFrame:
 # ════════════════════════════════════════════
 
 def save_results(df: DataFrame, name: str, output_path: str):
-    """
-    Write DataFrame to disk.
-    
-    Uses CSV on Windows local development to avoid
-    Hadoop native I/O issues with winutils.exe.
-    Production deployment (Linux cluster) uses Parquet
-    via the same function with format switched.
-    """
+    """Write DataFrame to Parquet. Create output dir if needed."""
     import os
     path = f"{output_path}/{name}"
     os.makedirs(path, exist_ok=True)
-    
-    # Convert to pandas and write CSV directly
-    # This completely bypasses Spark's Hadoop file commit
-    # protocol, which is what triggers the Windows error.
-    pandas_df = df.toPandas()
-    csv_path = f"{path}/data.csv"
-    pandas_df.to_csv(csv_path, index=False)
-    logger.info(f"Saved {name} → {csv_path} ({len(pandas_df)} rows)")
+    df.coalesce(1).write.mode('overwrite').parquet(path)
+    logger.info(f"Saved {name} → {path}")
 
 
 def main():
@@ -625,7 +604,7 @@ def main():
         if not input_valid:
             raise ValueError("Input validation failed")
 
-        output_path = "data/processed"
+        output_path = "/usr/local/airflow/include/meesho-commerce-platform/data/processed"
 
         # TRANSFORM AND LOAD
         logger.info("Step 3/6: Daily revenue...")
